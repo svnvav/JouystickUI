@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Joystick.UGUI
 {
@@ -11,7 +10,7 @@ namespace Joystick.UGUI
         private Canvas _canvas;
         private RectTransform _rectTransform;
         private bool _isCaptured;
-    
+
         public event Action<Vector2> OnDragBegin, OnDragMove, OnDragEnd;
 
         private void Awake()
@@ -19,24 +18,24 @@ namespace Joystick.UGUI
             _canvas = GetComponentInParent<Canvas>();
             _rectTransform = GetComponent<RectTransform>();
         }
-    
+
         private void Update()
         {
             if (!_isCaptured) return;
             OnDragMove?.Invoke(GetPosition());
         }
-    
+
         public void OnPointerUp(PointerEventData eventData)
         {
             _isCaptured = false;
             OnDragEnd?.Invoke(GetPosition());
         }
-    
+
         private void OnPointerDownInternal(Vector2 screenPosition)
         {
             var pos = ScreenPixelToLocalNormalized(screenPosition);
             if (pos.magnitude > 1f) return;
-            
+
             _isCaptured = true;
             OnDragBegin?.Invoke(pos);
         }
@@ -50,16 +49,16 @@ namespace Joystick.UGUI
 
         private Vector2 ScreenPixelToLocalNormalized(Vector2 position)
         {
-            var rect = _rectTransform.rect;
-
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _rectTransform,
                 position,
                 _canvas.worldCamera,
                 out var localPosition);
-            
+
+            var rect = _rectTransform.rect;
             var unitSize = rect.size * 0.5f;
-            return (localPosition - rect.center)/ unitSize;
+            
+            return (localPosition - rect.center) / unitSize;
         }
 
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
@@ -80,7 +79,7 @@ namespace Joystick.UGUI
         {
             OnPointerDownInternal(eventData.position);
         }
-    
+
         private Vector2 GetInputPosition()
         {
             return Input.mousePosition;
@@ -88,4 +87,3 @@ namespace Joystick.UGUI
 #endif
     }
 }
-
