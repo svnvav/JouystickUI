@@ -1,12 +1,14 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Joystick.UGUI
 {
     [RequireComponent(typeof(RectTransform))]
     public class JoystickInput : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
+        private Canvas _canvas;
         private RectTransform _rectTransform;
         private bool _isCaptured;
     
@@ -14,6 +16,7 @@ namespace Joystick.UGUI
 
         private void Awake()
         {
+            _canvas = GetComponentInParent<Canvas>();
             _rectTransform = GetComponent<RectTransform>();
         }
     
@@ -48,14 +51,18 @@ namespace Joystick.UGUI
         private Vector2 ScreenPixelToLocalNormalized(Vector2 position)
         {
             var rect = _rectTransform.rect;
-            var origin = _rectTransform.anchoredPosition + rect.center;
-    
-            var localPosition = position - origin;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                _rectTransform,
+                position,
+                _canvas.worldCamera,
+                out var localPosition);
+            
             var unitSize = rect.size * 0.5f;
-            return localPosition / unitSize;
+            return (localPosition - rect.center)/ unitSize;
         }
-    
-    #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
         private int _capturedTouchIndex;
         
         public void OnPointerDown(PointerEventData eventData)
@@ -68,7 +75,7 @@ namespace Joystick.UGUI
         {
             return Input.GetTouch(_capturedTouchIndex).position;
         }
-    #else
+#else
         public void OnPointerDown(PointerEventData eventData)
         {
             OnPointerDownInternal(eventData.position);
@@ -78,7 +85,7 @@ namespace Joystick.UGUI
         {
             return Input.mousePosition;
         }
-    #endif
+#endif
     }
 }
 
